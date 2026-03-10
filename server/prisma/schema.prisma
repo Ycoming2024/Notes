@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String    @id @default(uuid())
+  email       String    @unique
+  displayName String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  notes       Note[]
+  reminders   Reminder[]
+  devices     Device[]
+}
+
+model Device {
+  id         String   @id @default(uuid())
+  userId     String
+  platform   String
+  deviceName String?
+  pushToken  String?
+  lastSeenAt DateTime?
+  createdAt  DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Note {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String   @default("")
+  content    String   @default("")
+  color      String?
+  isPinned   Boolean  @default(false)
+  isArchived Boolean  @default(false)
+  isDeleted  Boolean  @default(false)
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders  Reminder[]
+
+  @@index([userId, updatedAt])
+}
+
+model Reminder {
+  id         String    @id @default(uuid())
+  userId     String
+  noteId     String?
+  title      String
+  body       String?
+  dueAt      DateTime
+  timezone   String    @default("Asia/Shanghai")
+  repeatRule String    @default("none")
+  status     String    @default("pending")
+  snoozeUntil DateTime?
+  isDeleted  Boolean   @default(false)
+  version    Int       @default(1)
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  note       Note?     @relation(fields: [noteId], references: [id], onDelete: SetNull)
+
+  @@index([userId, dueAt])
+  @@index([userId, updatedAt])
+}
+
+model ChangeLog {
+  id         Int      @id @default(autoincrement())
+  userId     String
+  entityType String
+  entityId   String
+  op         String
+  version    Int
+  changedAt  DateTime @default(now())
+
+  @@index([userId, changedAt])
+}
