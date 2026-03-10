@@ -1,4 +1,4 @@
-﻿import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 
@@ -8,7 +8,7 @@ async function bootstrap() {
 
   // Compatibility alias: allow requests coming as /notes-api/v1/*
   // in addition to the native /v1/* routes.
-  app.use((req, _res, next) => {
+  app.use((req: { url: string }, _res: unknown, next: () => void) => {
     if (req.url === '/notes-api/v1') {
       req.url = '/v1';
     } else if (req.url.startsWith('/notes-api/v1/')) {
@@ -24,3 +24,5 @@ async function bootstrap() {
 }
 
 bootstrap();
+
+

@@ -148,7 +148,7 @@ export class LocalStoreService {
     await this.ensureLoaded();
     const since = updatedAfter ? new Date(updatedAfter).getTime() : 0;
     return this.db.notes
-      .filter((n) => n.userId === userId && new Date(n.updatedAt).getTime() > since)
+      .filter((n) => n.userId === userId && !n.isDeleted && new Date(n.updatedAt).getTime() > since)
       .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt))
       .slice(0, Math.min(limit, 500));
   }
@@ -185,7 +185,7 @@ export class LocalStoreService {
     await this.ensureLoaded();
     const since = updatedAfter ? new Date(updatedAfter).getTime() : 0;
     return this.db.reminders
-      .filter((r) => r.userId === userId && new Date(r.updatedAt).getTime() > since)
+      .filter((r) => r.userId === userId && !r.isDeleted && new Date(r.updatedAt).getTime() > since)
       .sort((a, b) => +new Date(a.dueAt) - +new Date(b.dueAt))
       .slice(0, Math.min(limit, 500));
   }
