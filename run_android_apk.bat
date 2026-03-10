@@ -41,10 +41,12 @@ set "ANDROID_SDK_ROOT=%SDK_CANDIDATE%"
 set "PATH=%ANDROID_SDK_ROOT%\platform-tools;%ANDROID_SDK_ROOT%\cmdline-tools\latest\bin;%PATH%"
 set "GRADLE_OPTS=-Dorg.gradle.internal.plugins.portal.url.override=https://maven.aliyun.com/repository/gradle-plugin -Dhttps.protocols=TLSv1.2 -Dfile.encoding=UTF-8 %GRADLE_OPTS%"
 set "FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn"
+set "API_BASE_URL=https://ycoming.top"
 
 echo [INFO] Using Android SDK: %ANDROID_SDK_ROOT%
 echo [INFO] Using Gradle plugin mirror: https://maven.aliyun.com/repository/gradle-plugin
 echo [INFO] Using Flutter storage mirror: %FLUTTER_STORAGE_BASE_URL%
+echo [INFO] Using API base URL: %API_BASE_URL%
 
 set "LOCAL_PROPERTIES=%APP_DIR%\android\local.properties"
 if exist "%LOCAL_PROPERTIES%" (
@@ -60,13 +62,25 @@ if exist "%LOCAL_PROPERTIES%" (
 )
 
 pushd "%APP_DIR%"
+if exist ".dart_tool" (
+  rmdir /s /q ".dart_tool"
+)
+
 call "%FLUTTER_BAT%" pub get
 if errorlevel 1 (
   popd
   exit /b 1
 )
 
-call "%FLUTTER_BAT%" build apk --release
+if not exist ".dart_tool\package_config.json" (
+  echo [ERROR] .dart_tool\package_config.json not found after pub get.
+  echo         Try running manually in %APP_DIR%:
+  echo         %FLUTTER_BAT% clean ^&^& %FLUTTER_BAT% pub get
+  popd
+  exit /b 1
+)
+
+call "%FLUTTER_BAT%" build apk --release --dart-define=API_BASE_URL=%API_BASE_URL%
 set "BUILD_EXIT=%ERRORLEVEL%"
 popd
 
